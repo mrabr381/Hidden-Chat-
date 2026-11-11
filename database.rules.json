@@ -1,0 +1,26 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$roomHash": {
+        ".read": "$roomHash.matches(/^r_[0-9a-f]{24}$/)",
+        "meta": {
+          ".write": "!data.exists() && newData.hasChildren(['ownerUid', 'adminTokenHash', 'createdAt']) && newData.child('ownerUid').isString() && newData.child('adminTokenHash').isString()"
+        },
+        "messages": {
+          ".write": "$roomHash.matches(/^r_[0-9a-f]{24}$/)",
+          "$msgId": {
+            ".validate": "newData.hasChildren(['sender', 'uid', 'stegoText', 'timestamp']) && newData.child('stegoText').isString() && newData.child('stegoText').val().length < 50000"
+          }
+        }
+      }
+    },
+    "media_vault": {
+      "$mediaId": {
+        ".read": true,
+        ".write": "!data.exists() && newData.hasChildren(['payload', 'timestamp']) && newData.child('payload').isString() && newData.child('payload').val().length < 4000000"
+      }
+    }
+  }
+}
