@@ -1,0 +1,20 @@
+# Environment & Secret Keys (Never commit secrets to GitHub)
+.env
+.env.*
+!.env.example
+firebase-config.local.js
+*.pem
+*.key
+
+# Firebase & Netlify Local Cache
+.firebase/
+.firebaserc
+.netlify/
+firebase-debug.log*
+
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+node_modules/
