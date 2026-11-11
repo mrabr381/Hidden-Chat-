@@ -152,4 +152,4 @@ Licensed under the **Non-Commercial Personal & Educational Use License** — com
 
 ---
 
-- **⚖️ Disclaimer:** This project is developed for personal privacy, cryptographic research, and educational purposes. Users are solely responsible for complying with local laws and regulations.
+**⚖️ Disclaimer:** This project is developed for personal privacy, cryptographic research, and educational purposes. Users are solely responsible for complying with local laws and regulations.
