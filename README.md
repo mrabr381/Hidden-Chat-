@@ -145,11 +145,11 @@ Live Demo Reference: [https://hidden-chaat.netlify.app/](https://hidden-chaat.ne
 
 ---
 
-- **⚖️ Disclaimer:** This project is developed for personal privacy, cryptographic research, and educational purposes. Users are solely responsible for complying with local laws and regulations.
-
----
-
 ## 📜 License & Copyright
 
 Copyright © 2026 [**mrabr381**](https://github.com/mrabr381). All rights reserved.  
 Licensed under the **Non-Commercial Personal & Educational Use License** — commercial use, monetization, or sale of this software is strictly prohibited. See [`LICENSE`](./LICENSE) for full details.
+
+---
+
+- **⚖️ Disclaimer:** This project is developed for personal privacy, cryptographic research, and educational purposes. Users are solely responsible for complying with local laws and regulations.
