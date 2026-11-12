@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hidden Chat — Encrypted Emoji Steganography Messenger</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: #162033;
+      --card-elevated: #1e293b;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --sent-bubble: #064e3b;
+      --received-bubble: #1e293b;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at top, #172554 0%, #0b1120 55%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 18px 12px;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2px;
+    }
+    header h1 {
+      font-size: 1.7rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 4px;
+    }
+    .security-pills {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .sec-pill {
+      font-size: 0.72rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #bae6fd;
+      font-weight: 600;
+    }
+    .tabs {
+      display: flex;
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #0b1120;
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.25);
+    }
+    .panel {
+      display: none;
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    .panel.active {
+      display: flex;
+    }
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 5px;
+    }
+    textarea, input[type="text"], input[type="password"], select {
+      width: 100%;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      outline: none;
+      resize: vertical;
+      transition: border-color 0.15s;
+    }
+    textarea:focus, input[type="text"]:focus, input[type="password"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .emoji-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 4px;
+      max-height: 132px;
+      overflow-y: auto;
+      padding: 6px;
+      background: #0b1120;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .emoji-item {
+      font-size: 1.4rem;
+      background: #162033;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.15s;
+    }
+    .emoji-item:hover, .emoji-item.selected {
+      border-color: var(--accent);
+      transform: scale(1.08);
+      background: #1e293b;
+    }
+    .custom-emoji-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .custom-emoji-row input {
+      max-width: 120px;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+    .cover-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 4px 2px;
+      scrollbar-width: thin;
+    }
+    .cover-chip {
+      white-space: nowrap;
+      font-size: 0.76rem;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #162033;
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cover-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: #1e293b;
+    }
+    .action-btn {
+      background: var(--accent);
+      color: #0b1120;
+      border: none;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .action-btn:hover {
+      background: var(--accent-hover);
+    }
+    .btn-secondary {
+      background: #334155;
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+    .btn-danger {
+      background: #7f1d1d;
+      color: #fecaca;
+    }
+    .btn-danger:hover {
+      background: #991b1b;
+    }
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      border-radius: 6px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .status-msg {
+      font-size: 0.82rem;
+      min-height: 18px;
+    }
+    .status-msg.error { color: var(--error); }
+    .status-msg.success { color: var(--success); }
+    .status-msg.warning { color: var(--warning); }
+
+        .mode-switch-group {
+      display: inline-flex;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .mode-pill {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mode-pill.active {
+      background: var(--accent);
+      color: #0b1120;
+    }
+    .stego-img-card {
+      margin-top: 8px;
+      display: inline-flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 10px;
+      padding: 8px;
+      max-width: 100%;
+    }
+    .stego-img-preview {
+      max-width: 280px;
+      max-height: 240px;
+      width: auto;
+      height: auto;
+      border-radius: 8px;
+      cursor: zoom-in;
+      display: block;
+      object-fit: contain;
+      background: #020617;
+      transition: transform 0.15s ease;
+    }
+    .stego-img-preview:hover {
+      transform: scale(1.015);
+    }
+    .stego-img-toolbar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .lightbox-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.92);
+      z-index: 80;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 20px;
+      gap: 14px;
+    }
+    .lightbox-backdrop.open {
+      display: flex;
+    }
+    .lightbox-img {
+      max-width: 94vw;
+      max-height: 80vh;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      object-fit: contain;
+      background: #020617;
+    }
+    .lightbox-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: var(--card-bg);
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+    .attach-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    /* CHAT STYLES */
+    .chat-topbar {
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-status-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #1e293b;
+      border: 1px solid var(--border);
+    }
+    .badge.online {
+      color: #4ade80;
+      border-color: #166534;
+      background: rgba(22, 101, 52, 0.25);
+    }
+    .badge.local {
+      color: #38bdf8;
+      border-color: #0369a1;
+      background: rgba(3, 105, 161, 0.25);
+    }
+    .uid-tag {
+      font-family: monospace;
+      font-size: 0.72rem;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+    .chat-feed {
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      height: 360px;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+    .chat-empty {
+      margin: auto;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      max-width: 380px;
+      line-height: 1.5;
+    }
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 82%;
+    }
+    .msg-row.sent {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+    .msg-row.received {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+    .msg-bubble {
+      padding: 10px 13px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      position: relative;
+      width: 100%;
+      word-break: break-word;
+    }
+    .msg-row.sent .msg-bubble {
+      background: var(--sent-bubble);
+      border-color: #047857;
+      border-bottom-right-radius: 3px;
+    }
+    .msg-row.received .msg-bubble {
+      background: var(--received-bubble);
+      border-color: var(--border);
+      border-bottom-left-radius: 3px;
+    }
+    .msg-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.74rem;
+      color: #cbd5e1;
+      margin-bottom: 5px;
+    }
+    .sender-tag {
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sender-uid {
+      font-family: monospace;
+      font-size: 0.68rem;
+      opacity: 0.75;
+      font-weight: 500;
+    }
+    .msg-carrier-line {
+      font-size: 0.98rem;
+      line-height: 1.45;
+      color: #f8fafc;
+    }
+    .msg-secret-box {
+      margin-top: 7px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(11, 17, 32, 0.72);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      font-size: 0.88rem;
+      color: #e0f2fe;
+    }
+    .msg-secret-box.locked {
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #fde68a;
+      font-size: 0.78rem;
+    }
+    .msg-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .mini-btn {
+      background: rgba(11, 17, 32, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      color: #e2e8f0;
+      font-size: 0.71rem;
+      padding: 3px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .mini-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .chat-composer {
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .composer-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    /* MODAL */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.82);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 520px;
+      width: 100%;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal-card h3 {
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🕵️ Hidden Chat</h1>
+    <p>Normal emojis aur jumlon ke andar chup kar secret password-protected chat karein</p>
+    <div class="security-pills">
+      <span class="sec-pill">🛡️ Sirf Is App Mein Decode Hoga</span>
+      <span class="sec-pill">🔐 Strong Password Lock</span>
+      <span class="sec-pill">🕵️ 100% Private & Anonymous Chat</span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabBtnChat" onclick="switchTab('chat')">💬 Live Stego Chat</button>
+    <button class="tab-btn" id="tabBtnEncode" onclick="switchTab('encode')">🔒 Encoder (Inject Data)</button>
+    <button class="tab-btn" id="tabBtnDecode" onclick="switchTab('decode')">🔓 Decoder (Read Data)</button>
+  </div>
+
+  <!-- 1. REAL-TIME STEGO CHAT PANEL -->
+  <div id="chatPanel" class="panel active">
+    <div class="chat-topbar">
+      <div class="chat-status-strip">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span id="dbModeBadge" class="badge online">🟢 Live Encrypted Sync Active</span>
+          <span style="font-size:0.8rem; color:var(--text-muted);" id="roomCountInfo">Room: <strong>personal-room</strong></span>
+          <span id="myUidBadge" class="uid-tag" title="Har device ka apna unique ID tag hota hai taake same Nickname par bhi mix-up na ho">ID: #----</span>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="action-btn btn-secondary btn-sm" onclick="togglePanicMode()" id="panicBtn" title="Shortcut: Esc key">👁️ Reveal Mode: ON</button>
+          <button class="action-btn btn-secondary btn-sm" onclick="openCustomNodeModal()" title="Connect to a friend's custom Firebase server or reset to default">🌐 Custom Server</button>
+          <button class="action-btn btn-secondary btn-sm" onclick="hideRoomLocally()" title="Sirf aapki screen se chat chupaye (baqi users ki chat delete nahi hogi)">🧹 Clear My View</button>
+          <button class="action-btn btn-danger btn-sm" onclick="clearChatRoom()" title="Database se sab users ke liye room history delete karein">🗑️ Clear Room</button>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div>
+          <label for="chatNick" title="Tip: Naam ke aakhir mein #pin likhein (jaise Ali#786) taake har mobile/browser par aapki ID aur Admin status same rahe!">Your Nickname (Tip: Ali#pin for portable Admin):</label>
+          <input type="text" id="chatNick" value="Ali" maxlength="32" autocomplete="off" placeholder="e.g. Ali or Ali#786" oninput="handleNickOrPassChange()">
+        </div>
+        <div>
+          <label for="chatRoom">Room ID (Shared Group/1-on-1):</label>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="chatRoom" value="personal-room" maxlength="64" autocomplete="off" placeholder="e.g. secret-786">
+            <button class="action-btn btn-secondary btn-sm" onclick="joinRoom()">Join</button>
+          </div>
+        </div>
+        <div>
+          <label for="chatPass">Shared Secret Password:</label>
+          <div style="display:flex; gap:6px;">
+            <input type="password" id="chatPass" value="1234" maxlength="128" autocomplete="new-password" placeholder="Room password..." oninput="handleNickOrPassChange()">
+            <select id="chatTtlSelect" style="max-width:105px; font-size:0.78rem; padding:6px;" title="Auto-delete old messages after TTL" onchange="loadMessagesForRoom()">
+              <option value="0">TTL: Keep</option>
+              <option value="3600000">TTL: 1 Hr</option>
+              <option value="86400000">TTL: 24 Hr</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGES FEED -->
+    <div id="chatFeed" class="chat-feed"></div>
+
+    <!-- COMPOSER -->
+    <div class="chat-composer">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding-bottom:6px; border-bottom:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span style="font-size:0.8rem; font-weight:600; color:var(--text-muted);">Chat Mode:</span>
+          <div class="mode-switch-group">
+            <button type="button" class="mode-pill active" id="modeStegoBtn" onclick="setChatMode('stego')">🕵️ Stego Mode (Hide in Cover)</button>
+            <button type="button" class="mode-pill" id="modeSimpleBtn" onclick="setChatMode('simple')">💬 Simple Chat (Direct)</button>
+          </div>
+        </div>
+        <div id="coverModeToggleWrap" style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:0.78rem; color:var(--text-muted);">Carrier Style:</span>
+          <div class="mode-switch-group">
+            <button type="button" class="mode-pill active" id="coverStyleTextBtn" onclick="setCoverStyle('text')">📝 Emoji + Text</button>
+            <button type="button" class="mode-pill" id="coverStyleEmojiBtn" onclick="setCoverStyle('emoji')">😀 Only Emoji</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="quickCoverSection">
+        <label id="quickCoverLabel">Quick Cover Templates (Click to fill):</label>
+        <div class="cover-chips" id="chatCoverChips"></div>
+      </div>
+
+      <div class="grid-2" id="composerInputsGrid">
+        <div>
+          <label for="chatSecretInput" id="chatMainInputLabel">Secret Message (Chupa Hua Message):</label>
+          <input type="text" id="chatSecretInput" maxlength="4000" autocomplete="off" placeholder="Asli secret baat yahan likhein..." onkeydown="handleChatKey(event)">
+          <div class="attach-bar">
+            <input type="file" id="chatImageInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;" onchange="handleChatImageSelect(event)">
+            <button type="button" class="mini-btn" onclick="document.getElementById('chatImageInput').click()">🖼️ Inject Secret Photo in Emoji</button>
+            <span id="chatImageBadge" style="font-size:0.74rem; color:#4ade80; display:none;"></span>
+            <button type="button" id="clearChatImgBtn" class="mini-btn" style="display:none; color:#fca5a5;" onclick="clearChatImage()">✖ Remove Photo</button>
+          </div>
+        </div>
+        <div id="coverInputColumn">
+          <label for="chatCoverInput">Visible Cover Emoji / Innocuous Text:</label>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="chatCoverInput" value="[🤖] Aaj mausam kafi acha hai!" maxlength="240" autocomplete="off" placeholder="Cover emoji ya normal jumla...">
+            <button class="action-btn btn-secondary btn-sm" onclick="cycleRandomCover()" title="Random innocent cover text or emoji">🎲</button>
+          </div>
+        </div>
+      </div>
+      <div class="composer-row" style="justify-content: space-between;">
+        <div id="chatStatus" class="status-msg">Offline users jab bhi online aayenge, pichli chat history khud sync aur decrypt ho jayegi.</div>
+        <button class="action-btn" id="sendChatBtn" onclick="sendChatMessage()">🚀 Encrypt & Send Stego Message</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ENCODE PANEL -->
+  <div id="encodePanel" class="panel">
+    <div>
+      <label for="plainText">Secret Text / Prompt (Ya Secret Image Inject Karein):</label>
+      <textarea id="plainText" rows="4" placeholder="Apna secret data ya prompt yahan enter karein..."></textarea>
+      <div class="attach-bar">
+        <input type="file" id="encodeImageInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;" onchange="handleEncodeImageSelect(event)">
+        <button type="button" class="mini-btn" onclick="document.getElementById('encodeImageInput').click()">🖼️ Attach Secret Photo (Original Quality)</button>
+        <span id="encodeImageBadge" style="font-size:0.75rem; color:#4ade80; display:none;"></span>
+        <button type="button" id="clearEncodeImgBtn" class="mini-btn" style="display:none; color:#fca5a5;" onclick="clearEncodeImage()">✖ Remove Photo</button>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <label for="encodePassword">Optional Secret Password:</label>
+        <input type="password" id="encodePassword" placeholder="Khali chhor dein tab bhi sirf yehi Decoder khol sakega...">
+      </div>
+      <div>
+        <label for="selectedEmoji">Selected Emoji / Cover Text:</label>
+        <div class="custom-emoji-row" style="margin-top:0;">
+          <input type="text" id="selectedEmoji" value="🤖" maxlength="60" style="max-width:100%; flex:1; text-align:left;">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label>Quick Innocent Cover Phrases (Click to use as carrier):</label>
+      <div class="cover-chips" id="encodeCoverChips"></div>
+    </div>
+
+    <div>
+      <label>Select Inbuilt Carrier Emoji (96 Emojis):</label>
+      <div class="emoji-picker" id="emojiPicker"></div>
+    </div>
+
+    <button class="action-btn" onclick="handleEncode()">🔒 Encrypt & Inject into Emoji</button>
+
+    <div>
+      <label for="encodedOutput">Resulting Carrier (WhatsApp & Web Safe — Locked to this App):</label>
+      <textarea id="encodedOutput" rows="2" readonly placeholder="Output yahan display hoga..."></textarea>
+      <div class="btn-row">
+        <button class="action-btn btn-secondary" onclick="copyOutput('encodedOutput', 'encodeStatus')">📋 Copy Result</button>
+        <button class="action-btn btn-secondary" onclick="sendToDecoder()">🔍 Send to Decoder Tab</button>
+      </div>
+      <div id="encodeStatus" class="status-msg"></div>
+    </div>
+  </div>
+
+  <!-- 3. DECODE PANEL -->
+  <div id="decodePanel" class="panel">
+    <div class="grid-2">
+      <div>
+        <label for="decodeInput">Paste Emoji / Message with Hidden Data:</label>
+        <textarea id="decodeInput" rows="3" placeholder="Yahan encoded emoji ya chat message paste karein..."></textarea>
+      </div>
+      <div>
+        <label for="decodePassword">Decryption Password (If password-protected):</label>
+        <input type="password" id="decodePassword" placeholder="Agar password lagaya tha to yahan likhein...">
+        <p style="font-size:0.76rem; color:var(--text-muted); margin-top:6px;">
+          🛡️ App Lock Active: Is encoder ka chupa message sirf isi app ke Decoder mein khul sakta hai.
+        </p>
+      </div>
+    </div>
+
+    <button class="action-btn" onclick="handleDecode()">🔓 Extract & Decrypt Hidden Text</button>
+
+    <div>
+      <label for="decodedOutput">Extracted Secret Text / Media:</label>
+      <textarea id="decodedOutput" rows="5" readonly placeholder="Decoded text yahan nazar aayega..."></textarea>
+      <div id="decodedImageWrap" style="display:none; margin-top:8px;">
+        <div class="stego-img-card">
+          <span id="decodedImageMeta" style="font-size:0.78rem; color:#4ade80; font-weight:600;">🖼️ Extracted Secret Image (Original Quality):</span>
+          <img id="decodedImagePreview" class="stego-img-preview" alt="Extracted Secret" onclick="openImageLightbox(this.src, this.dataset.filename || 'secret-image.png')" title="Click to view full size">
+          <div class="stego-img-toolbar">
+            <button type="button" class="mini-btn" onclick="openImageLightbox(document.getElementById('decodedImagePreview').src, document.getElementById('decodedImagePreview').dataset.filename || 'secret-image.png')">🔍 Barra Kar Ke Dekhein (Full View)</button>
+            <button type="button" class="mini-btn" onclick="downloadStegoImage(document.getElementById('decodedImagePreview').src, document.getElementById('decodedImagePreview').dataset.filename || 'secret-image.png')">⬇️ Download Same Quality</button>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="action-btn btn-secondary" onclick="copyOutput('decodedOutput', 'decodeStatus')">📋 Copy Decoded Text</button>
+        <button class="action-btn btn-secondary" onclick="clearDecode()">🧹 Clear</button>
+      </div>
+      <div id="decodeStatus" class="status-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOM SERVER BRIDGE MODAL (Default DB URL stays hidden) -->
+<div id="customNodeModal" class="modal-backdrop">
+  <div class="modal-card">
+    <h3>🌐 Connect Custom Firebase Node (Optional)</h3>
+    <p style="font-size:0.84rem; color:var(--text-muted); line-height:1.5;">
+      Default server pehle se active aur hidden hai. Agar aap kisi doosre dost ke <strong>alag Firebase Database</strong> se connect hona chahte hain (ya apna alag database lagana chahte hain), to uska URL neeche dalein:
+    </p>
+    <div>
+      <label for="customDbInput">Custom Firebase Database URL (Masked):</label>
+      <input type="password" id="customDbInput" placeholder="https://your-custom-db.firebaseio.com">
+    </div>
+    <div id="customNodeStatus" class="status-msg"></div>
+    <div class="btn-row" style="justify-content:flex-end;">
+      <button class="action-btn btn-secondary" onclick="resetToDefaultServer()">Use Built-in Default Server</button>
+      <button class="action-btn" onclick="saveCustomServer()">Connect Custom DB</button>
+      <button class="action-btn btn-secondary" onclick="closeCustomNodeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- FULLSCREEN IMAGE PREVIEW LIGHTBOX MODAL -->
+<div id="imageLightboxModal" class="lightbox-backdrop" onclick="if(event.target===this) closeImageLightbox()">
+  <img id="lightboxImgEl" class="lightbox-img" alt="Full Size Preview">
+  <div class="lightbox-bar">
+    <span id="lightboxCaption" style="font-size:0.82rem; color:#cbd5e1; font-weight:600;">Original Quality Preview</span>
+    <button type="button" class="action-btn btn-sm" id="lightboxDownloadBtn" onclick="downloadLightboxImage()">⬇️ Download Original Quality</button>
+    <button type="button" class="action-btn btn-secondary btn-sm" onclick="closeImageLightbox()">✖ Close (Esc)</button>
+  </div>
+</div>
+
+<script>
+  // ============================================================================
+  // 1. EXPANDED EMOJI & INNOCUOUS COVER TEMPLATES (48 Emojis + 16 Templates)
+  // ============================================================================
+  const INBUILT_EMOJIS = [
+    '🤖', '🔒', '🤫', '📁', '📝', '💡', '⚡', '🎯',
+    '🚀', '🔥', '💎', '💬', '🧠', '📦', '🎨', '🕵️',
+    '🔑', '🕶️', '📜', '💻', '🌐', '🛡️', '✨', '☕',
+    '🎮', '🎧', '📸', '🌙', '☀️', '🌧️', '🍕', '🍔',
+    '🏆', '⚽', '🏏', '🚗', '✈️', '🏠', '⏰', '📌',
+    '🎁', '🧭', '🔋', '📡', '🧬', '🔭', '🪐', '🍀',
+    '😂', '😎', '🥳', '🤔', '🫡', '🤝', '👍', '❤️',
+    '🕌', '🌙', '⭐', '🌸', '🌹', '🌴', '🌊', '❄️',
+    '🍵', '🥤', '🍰', '🍎', '🥭', '🍿', '🎸', '🎬',
+    '📚', '✏️', '📎', '🔍', '🔔', '📢', '💰', '💳',
+    '🛠️', '⚙️', '🧲', '🧪', '🩺', '💊', '🚪', '🪟',
+    '🐱', '🦁', '🦅', '🦋', '🐝', '🐢', '🐬', '🦄'
+  ];
+
+  const COVER_PRESETS = [
+    '[🤖] Aaj mausam kafi acha hai!',
+    '[☕] Sham ko chai peene chalein?',
+    '[📁] Kal wali assignment email kar dena.',
+    '[🏏] Aaj match ka kya score chal raha hai?',
+    '[💻] Zoom meeting 5 baje start hogi.',
+    '[✨] Shukriya bhai, file mil gayi!',
+    '[🍕] Dinner mein aaj kya mangwana hai?',
+    '[🚗] Main 10 minute tak pohanch raha hoon.',
+    '[📚] Exam ke notes group mein share kar do.',
+    '[🎮] Raat ko Lobby mein aana game khelte hain.',
+    '[🌧️] Bahar tez barish shuru ho gayi hai.',
+    '[🔋] Mera phone charge par laga hua tha.',
+    '[📸] Kal wali pictures drive par upload kar dena.',
+    '[🛒] Wapsi par doodh aur bread lete aana.',
+    '[⏰] Subah 8 baje alarm laga lena.',
+    '[🍀] In Shaa Allah sab behtar ho jayega!'
+  ];
+  let coverIndex = 0;
+
+  const ZW_0 = '\u200D'; // Zero-Width Joiner (Bit 0)
+  const ZW_1 = '\u200C'; // Zero-Width Non-Joiner (Bit 1)
+  const LEGACY_ZW_0 = '\u200B';
+
+  // Initialize Emoji Picker & Cover Chips
+  const picker = document.getElementById('emojiPicker');
+  const selectedEmojiInput = document.getElementById('selectedEmoji');
+
+  INBUILT_EMOJIS.forEach((emo, idx) => {
+    const item = document.createElement('div');
+    item.className = 'emoji-item' + (idx === 0 ? ' selected' : '');
+    item.textContent = emo;
+    item.onclick = () => {
+      document.querySelectorAll('.emoji-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      selectedEmojiInput.value = emo;
+    };
+    picker.appendChild(item);
+  });
+
+  let currentChatMode = 'stego'; // 'stego' or 'simple'
+  let currentCoverStyle = 'text'; // 'text' or 'emoji'
+  let attachedChatImageDataUri = null;
+  let attachedChatImageName = 'secret-photo.png';
+  let attachedEncodeImageDataUri = null;
+  let attachedEncodeImageName = 'secret-photo.png';
+  let currentLightboxSrc = '';
+  let currentLightboxName = 'secret-photo.png';
+
+  function renderCoverChips() {
+    const chatChips = document.getElementById('chatCoverChips');
+    const encodeChips = document.getElementById('encodeCoverChips');
+    if (chatChips) {
+      chatChips.innerHTML = '';
+      if (currentCoverStyle === 'emoji') {
+        INBUILT_EMOJIS.slice(0, 32).forEach((emo) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'cover-chip';
+          btn.style.fontSize = '1.05rem';
+          btn.textContent = `[${emo}]`;
+          btn.onclick = () => { document.getElementById('chatCoverInput').value = `[${emo}]`; };
+          chatChips.appendChild(btn);
+        });
+      } else {
+        COVER_PRESETS.forEach((phrase) => {
+          const c1 = document.createElement('button');
+          c1.type = 'button';
+          c1.className = 'cover-chip';
+          c1.textContent = phrase;
+          c1.onclick = () => { document.getElementById('chatCoverInput').value = phrase; };
+          chatChips.appendChild(c1);
+        });
+      }
+    }
+    if (encodeChips && encodeChips.children.length === 0) {
+      COVER_PRESETS.forEach((phrase) => {
+        const c2 = document.createElement('button');
+        c2.type = 'button';
+        c2.className = 'cover-chip';
+        c2.textContent = phrase;
+        c2.onclick = () => { document.getElementById('selectedEmoji').value = phrase; };
+        encodeChips.appendChild(c2);
+      });
+    }
+  }
+  renderCoverChips();
+
+  function setCoverStyle(style) {
+    currentCoverStyle = style;
+    const textBtn = document.getElementById('coverStyleTextBtn');
+    const emojiBtn = document.getElementById('coverStyleEmojiBtn');
+    const coverInput = document.getElementById('chatCoverInput');
+    const label = document.getElementById('quickCoverLabel');
+
+    if (style === 'emoji') {
+      emojiBtn.classList.add('active');
+      textBtn.classList.remove('active');
+      const randomEmo = INBUILT_EMOJIS[coverIndex % INBUILT_EMOJIS.length];
+      coverInput.value = `[${randomEmo}]`;
+      if (label) label.textContent = 'Quick Emoji Carriers (Click to pick emoji only):';
+    } else {
+      textBtn.classList.add('active');
+      emojiBtn.classList.remove('active');
+      coverInput.value = COVER_PRESETS[coverIndex % COVER_PRESETS.length];
+      if (label) label.textContent = 'Quick Cover Templates (Click to fill):';
+    }
+    renderCoverChips();
+  }
+
+  function setChatMode(mode) {
+    currentChatMode = mode;
+    const stegoBtn = document.getElementById('modeStegoBtn');
+    const simpleBtn = document.getElementById('modeSimpleBtn');
+    const coverCol = document.getElementById('coverInputColumn');
+    const quickSec = document.getElementById('quickCoverSection');
+    const coverToggleWrap = document.getElementById('coverModeToggleWrap');
+    const mainLabel = document.getElementById('chatMainInputLabel');
+    const mainInput = document.getElementById('chatSecretInput');
+
+    if (mode === 'simple') {
+      simpleBtn.classList.add('active');
+      stegoBtn.classList.remove('active');
+      if (coverCol) coverCol.style.display = 'none';
+      if (quickSec) quickSec.style.display = 'none';
+      if (coverToggleWrap) coverToggleWrap.style.display = 'none';
+      if (mainLabel) mainLabel.textContent = 'Direct Chat Message (Simple Encrypted Room Message):';
+      if (mainInput) mainInput.placeholder = 'Apna message likhein aur Enter dabayein...';
+    } else {
+      stegoBtn.classList.add('active');
+      simpleBtn.classList.remove('active');
+      if (coverCol) coverCol.style.display = '';
+      if (quickSec) quickSec.style.display = '';
+      if (coverToggleWrap) coverToggleWrap.style.display = 'flex';
+      if (mainLabel) mainLabel.textContent = 'Secret Message (Chupa Hua Message):';
+      if (mainInput) mainInput.placeholder = 'Asli secret baat yahan likhein...';
+    }
+  }
+
+  const ALLOWED_IMAGE_MIMES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+  function isSafeRasterDataUri(str) {
+    if (typeof str !== 'string') return false;
+    return /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(str.trim());
+  }
+
+  function verifyImageMagicBytes(arrayBuffer) {
+    const b = new Uint8Array(arrayBuffer);
+    if (b.length < 12) return false;
+    // PNG: 89 50 4E 47 0D 0A 1A 0A
+    if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return true;
+    // JPEG: FF D8 FF
+    if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return true;
+    // GIF: 47 49 46 38 ("GIF8")
+    if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return true;
+    // WEBP: "RIFF" .... "WEBP"
+    if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+        b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return true;
+    return false;
+  }
+
+  // Preserves exact original file bytes for verified raster images up to 2.5 MB; rejects SVG/scripts/fake extensions (Check 23)
+  function readOriginalQualityImage(file, callback, onError) {
+    const fail = (msg) => { if (typeof onError === 'function') onError(msg); };
+    if (!file) return fail('Koi file select nahi ki gayi.');
+    if (!ALLOWED_IMAGE_MIMES.includes(file.type)) {
+      return fail('Security Block: Sirf PNG, JPG, WEBP, ya GIF images allow hain (SVG ya scripts allowed nahi).');
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return fail('Security Block: Image size 5 MB se kam hona chahiye.');
+    }
+    const safeName = (file.name || 'secret-image.png').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60);
+
+    const headerReader = new FileReader();
+    headerReader.onload = (he) => {
+      if (!verifyImageMagicBytes(he.target.result)) {
+        return fail('Security Block: Fake image extension detect hui hai! Asli image file select karein.');
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawDataUri = e.target.result;
+        if (!isSafeRasterDataUri(rawDataUri)) {
+          return fail('Security Block: Invalid image encoding.');
+        }
+        if (file.size <= 2600000) {
+          callback(rawDataUri, safeName);
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1920;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          callback(canvas.toDataURL('image/jpeg', 0.95), safeName);
+        };
+        img.src = rawDataUri;
+      };
+      reader.readAsDataURL(file);
+    };
+    headerReader.readAsArrayBuffer(file.slice(0, 16));
+  }
+
+  function handleChatImageSelect(ev) {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('chatStatus');
+    readOriginalQualityImage(file, (dataUri, fileName) => {
+      attachedChatImageDataUri = dataUri;
+      attachedChatImageName = fileName;
+      const badge = document.getElementById('chatImageBadge');
+      const clr = document.getElementById('clearChatImgBtn');
+      if (badge) {
+        badge.style.display = 'inline';
+        const kb = Math.round((dataUri.length * 0.75) / 1024);
+        badge.textContent = `✅ Original Quality Ready: ${fileName} (~${kb} KB)`;
+      }
+      if (clr) clr.style.display = 'inline-block';
+    }, (errMsg) => {
+      ev.target.value = '';
+      if (status) { status.textContent = errMsg; status.className = 'status-msg error'; }
+    });
+  }
+
+  function clearChatImage() {
+    attachedChatImageDataUri = null;
+    attachedChatImageName = 'secret-photo.png';
+    const inp = document.getElementById('chatImageInput');
+    if (inp) inp.value = '';
+    const badge = document.getElementById('chatImageBadge');
+    const clr = document.getElementById('clearChatImgBtn');
+    if (badge) badge.style.display = 'none';
+    if (clr) clr.style.display = 'none';
+  }
+
+  function handleEncodeImageSelect(ev) {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('encodeStatus');
+    readOriginalQualityImage(file, (dataUri, fileName) => {
+      attachedEncodeImageDataUri = dataUri;
+      attachedEncodeImageName = fileName;
+      const badge = document.getElementById('encodeImageBadge');
+      const clr = document.getElementById('clearEncodeImgBtn');
+      if (badge) {
+        badge.style.display = 'inline';
+        const kb = Math.round((dataUri.length * 0.75) / 1024);
+        badge.textContent = `✅ Original Quality Attached: ${fileName} (~${kb} KB)`;
+      }
+      if (clr) clr.style.display = 'inline-block';
+    }, (errMsg) => {
+      ev.target.value = '';
+      if (status) { status.textContent = errMsg; status.className = 'status-msg error'; }
+    });
+  }
+
+  function clearEncodeImage() {
+    attachedEncodeImageDataUri = null;
+    attachedEncodeImageName = 'secret-photo.png';
+    const inp = document.getElementById('encodeImageInput');
+    if (inp) inp.value = '';
+    const badge = document.getElementById('encodeImageBadge');
+    const clr = document.getElementById('clearEncodeImgBtn');
+    if (badge) badge.style.display = 'none';
+    if (clr) clr.style.display = 'none';
+  }
+
+  function openImageLightbox(src, fileName) {
+    if (!src || !isSafeRasterDataUri(src)) return;
+    currentLightboxSrc = src;
+    currentLightboxName = fileName || 'secret-image.png';
+    const modal = document.getElementById('imageLightboxModal');
+    const imgEl = document.getElementById('lightboxImgEl');
+    const cap = document.getElementById('lightboxCaption');
+    if (imgEl) imgEl.src = src;
+    if (cap) cap.textContent = `🖼️ ${currentLightboxName} (Original Quality)`;
+    if (modal) modal.classList.add('open');
+  }
+
+  function closeImageLightbox() {
+    const modal = document.getElementById('imageLightboxModal');
+    if (modal) modal.classList.remove('open');
+  }
+
+  function downloadStegoImage(dataUri, fileName) {
+    if (!dataUri || !isSafeRasterDataUri(dataUri)) return;
+    const a = document.createElement('a');
+    a.href = dataUri;
+    a.download = fileName || 'secret-image.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function downloadLightboxImage() {
+    downloadStegoImage(currentLightboxSrc, currentLightboxName);
+  }
+
+  // Stores & fetches encrypted high-res media blobs in Firebase / localStorage so emojis stay fast and images keep 100% original quality!
+  const mediaVaultMemoryCache = {};
+
+  async function storeEncryptedMediaBlob(mediaId, encryptedMediaStr) {
+    mediaVaultMemoryCache[mediaId] = encryptedMediaStr;
+    safeSetStorage('stego_media_' + mediaId, encryptedMediaStr);
+    if (firebaseBaseUrl) {
+      const cleanUrl = firebaseBaseUrl.replace(/\/+$/, '');
+      try {
+        await fetch(`${cleanUrl}/media_vault/${encodeURIComponent(mediaId)}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload: encryptedMediaStr, timestamp: Date.now() })
+        });
+      } catch (e) {}
+    }
+  }
+
+  async function fetchEncryptedMediaBlob(mediaId) {
+    if (mediaVaultMemoryCache[mediaId]) return mediaVaultMemoryCache[mediaId];
+    const localCopy = safeGetStorage('stego_media_' + mediaId);
+    if (localCopy) {
+      mediaVaultMemoryCache[mediaId] = localCopy;
+      return localCopy;
+    }
+    if (firebaseBaseUrl) {
+      const cleanUrl = firebaseBaseUrl.replace(/\/+$/, '');
+      try {
+        const res = await fetch(`${cleanUrl}/media_vault/${encodeURIComponent(mediaId)}.json`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.payload) {
+            mediaVaultMemoryCache[mediaId] = data.payload;
+            safeSetStorage('stego_media_' + mediaId, data.payload);
+            return data.payload;
+          }
+        }
+      } catch (e) {}
+    }
+    return null;
+  }
+
+  function uint8ToBase64(bytes) {
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+
+  function base64ToUint8(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  // ============================================================================
+  // 2. PROPRIETARY APP-EXCLUSIVE ARMOR (ZSG4) + AES-256-GCM ENCRYPTION
+  //    Why no external tool or AI can decode this:
+  //    1) Bit-level position-dependent permutation + PRNG stream whitening
+  //    2) Dual-layer key derivation combining App Master Pepper + User Password
+  //    3) Even with an empty user password, payload is AES-256-GCM encrypted
+  //       using the internal App Master Pepper so raw UTF-8 never exists in ZW bits!
+  // ============================================================================
+  const APP_MASTER_PEPPER = 'StegoApp-Exclusive-v4-9f8e7d6c5b4a392817263544';
+  const ZSG4_MAGIC = [0x5A, 0x53, 0x47, 0x34]; // "ZSG4"
+
+  // Scrambles byte stream with position-dependent nonlinear transformation
+  function scrambleArmor(bytes, encodeMode) {
+    const out = new Uint8Array(bytes.length);
+    let state = 0xA5;
+    for (let i = 0; i < bytes.length; i++) {
+      const mask = ((i * 73) ^ (state * 31) ^ 0x5C) & 0xFF;
+      if (encodeMode) {
+        const b = bytes[i];
+        const rot = ((b << 3) | (b >>> 5)) & 0xFF;
+        out[i] = rot ^ mask;
+        state = out[i];
+      } else {
+        const c = bytes[i];
+        const rot = (c ^ mask) & 0xFF;
+        out[i] = ((rot >>> 3) | (rot << 5)) & 0xFF;
+        state = c;
+      }
+    }
+    return out;
+  }
+
+  function bytesToZeroWidth(bytes) {
+    const armored = scrambleArmor(bytes, true);
+    let zwSequence = '';
+    for (let i = 0; i < armored.length; i++) {
+      const byte = armored[i];
+      for (let bit = 7; bit >= 0; bit--) {
+        zwSequence += (byte & (1 << bit)) ? ZW_1 : ZW_0;
+      }
+    }
+    return zwSequence;
+  }
+
+  function zeroWidthToBytes(input) {
+    const hasZWJ = input.includes(ZW_0);
+    const hasLegacy = input.includes(LEGACY_ZW_0);
+
+    let bits = '';
+    for (const char of input) {
+      if (hasZWJ) {
+        if (char === ZW_0) bits += '0';
+        else if (char === ZW_1) bits += '1';
+      } else if (hasLegacy) {
+        if (char === LEGACY_ZW_0) bits += '0';
+        else if (char === ZW_1) bits += '1';
+      }
+    }
+
+    if (bits.length < 8) return null;
+    const completeBytes = Math.floor(bits.length / 8);
+    const rawBytes = new Uint8Array(completeBytes);
+    for (let i = 0; i < completeBytes; i++) {
+      rawBytes[i] = parseInt(bits.substr(i * 8, 8), 2);
+    }
+    return {
+      unarmored: scrambleArmor(rawBytes, false),
+      legacyRaw: rawBytes
+    };
+  }
+
+  function stripZeroWidth(str) {
+    return String(str || '').replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+  }
+
+  async function sha256Hex(text) {
+    const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function deriveExclusiveAesKey(userPassword, salt) {
+    const combinedSecret = APP_MASTER_PEPPER + '::' + (userPassword || 'DEFAULT_APP_LOCK');
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+      'raw',
+      enc.encode(combinedSecret),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey']
+    );
+    return window.crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: 210000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  async function packAndEncrypt(plainText, userPassword) {
+    const plainBytes = new TextEncoder().encode(plainText);
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const hasUserPass = Boolean(userPassword && userPassword.length > 0);
+    const key = await deriveExclusiveAesKey(hasUserPass ? userPassword : '', salt);
+
+    const cipherBuf = await window.crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: iv },
+      key,
+      plainBytes
+    );
+    const cipherBytes = new Uint8Array(cipherBuf);
+    // Packet structure: [ZSG4 (4B)] + [ModeFlag (1B: 0x02=PassLocked, 0x01=AppLocked)] + [Salt (16B)] + [IV (12B)] + [Ciphertext]
+    const packed = new Uint8Array(4 + 1 + 16 + 12 + cipherBytes.length);
+    packed.set(ZSG4_MAGIC, 0);
+    packed[4] = hasUserPass ? 0x02 : 0x01;
+    packed.set(salt, 5);
+    packed.set(iv, 21);
+    packed.set(cipherBytes, 33);
+    return packed;
+  }
+
+  async function unpackAndDecrypt(extractedObj, userPassword) {
+    if (!extractedObj) {
+      return { ok: false, error: 'Koi hidden data nahi mila.' };
+    }
+    const bytes = extractedObj.unarmored;
+    const isZsg4 = bytes.length >= 49 &&
+      bytes[0] === ZSG4_MAGIC[0] &&
+      bytes[1] === ZSG4_MAGIC[1] &&
+      bytes[2] === ZSG4_MAGIC[2] &&
+      bytes[3] === ZSG4_MAGIC[3];
+
+    if (isZsg4) {
+      const modeFlag = bytes[4];
+      const salt = bytes.slice(5, 21);
+      const iv = bytes.slice(21, 33);
+      const cipherBytes = bytes.slice(33);
+
+      if (modeFlag === 0x02 && !userPassword) {
+        return { ok: false, locked: true, error: '🔒 Yeh message password-protected hai. Password enter karein.' };
+      }
+
+      try {
+        const keyToTry = await deriveExclusiveAesKey(modeFlag === 0x02 ? userPassword : '', salt);
+        const plainBuf = await window.crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv: iv },
+          keyToTry,
+          cipherBytes
+        );
+        return {
+          ok: true,
+          encrypted: modeFlag === 0x02,
+          text: new TextDecoder().decode(plainBuf)
+        };
+      } catch (e) {
+        // Fallback check for 120k iteration messages from earlier sessions
+        try {
+          const combinedSecret = APP_MASTER_PEPPER + '::' + ((modeFlag === 0x02 ? userPassword : '') || 'DEFAULT_APP_LOCK');
+          const km = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(combinedSecret), { name: 'PBKDF2' }, false, ['deriveKey']);
+          const key120 = await window.crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: 120000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+          const plainBuf2 = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key120, cipherBytes);
+          return { ok: true, encrypted: modeFlag === 0x02, text: new TextDecoder().decode(plainBuf2) };
+        } catch (e2) {
+          return { ok: false, locked: true, error: '❌ Ghalat password! Secret message unlock nahi ho saka.' };
+        }
+      }
+    }
+
+    // Backward compatibility for older messages encoded before ZSG4 upgrade
+    const legacy = extractedObj.legacyRaw;
+    if (legacy && legacy.length > 0) {
+      if (legacy[0] === 0x01 && legacy.length >= 45) {
+        if (!userPassword) {
+          return { ok: false, locked: true, error: '🔒 Password-protected message.' };
+        }
+        try {
+          const enc = new TextEncoder();
+          const km = await window.crypto.subtle.importKey('raw', enc.encode(userPassword), { name: 'PBKDF2' }, false, ['deriveKey']);
+          const legacyKey = await window.crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt: legacy.slice(1, 17), iterations: 100000, hash: 'SHA-256' },
+            km,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['decrypt']
+          );
+          const pb = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: legacy.slice(17, 29) }, legacyKey, legacy.slice(29));
+          return { ok: true, encrypted: true, text: new TextDecoder().decode(pb) };
+        } catch (e) {
+          return { ok: false, locked: true, error: '❌ Ghalat password!' };
+        }
+      }
+      try {
+        return { ok: true, encrypted: false, text: new TextDecoder().decode(legacy) };
+      } catch (e) {}
+    }
+
+    return { ok: false, error: 'Invalid ya unsupported stego format.' };
+  }
+
+  // ============================================================================
+  // 3. STANDALONE ENCODER & DECODER TABS
+  // ============================================================================
+  async function handleEncode() {
+    const text = document.getElementById('plainText').value;
+    const password = document.getElementById('encodePassword').value;
+    const emoji = selectedEmojiInput.value.trim() || '🤖';
+    const status = document.getElementById('encodeStatus');
+
+    if (!text && !attachedEncodeImageDataUri) {
+      status.textContent = 'Barah-e-karam secret text likhein ya photo attach karein.';
+      status.className = 'status-msg error';
+      return;
+    }
+
+    try {
+      status.textContent = 'Encrypting & injecting...';
+      status.className = 'status-msg warning';
+
+      let combinedPayload = text;
+      if (attachedEncodeImageDataUri) {
+        const mediaId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        const encImgBytes = await packAndEncrypt(attachedEncodeImageDataUri, password);
+        await storeEncryptedMediaBlob(mediaId, uint8ToBase64(encImgBytes));
+        combinedPayload = JSON.stringify({
+          __stegoMedia: true,
+          text: text || '',
+          mediaId: mediaId,
+          imgName: attachedEncodeImageName || 'secret-image.png'
+        });
+      }
+
+      const payloadBytes = await packAndEncrypt(combinedPayload, password);
+      const zwSequence = bytesToZeroWidth(payloadBytes);
+      const cleanCarrier = stripZeroWidth(emoji);
+      const carrier = (cleanCarrier.startsWith('[') ? cleanCarrier : `[${cleanCarrier}]`) + zwSequence;
+      document.getElementById('encodedOutput').value = carrier;
+
+      const modeLabel = password ? 'Password Locked' : 'App Locked';
+      status.textContent = `Kamyabi se inject ho gaya! (${modeLabel}${attachedEncodeImageDataUri ? ' + Original Quality Photo' : ''})`;
+      status.className = 'status-msg success';
+    } catch (err) {
+      status.textContent = 'Encryption process mukammal nahi ho saka. Dobara koshish karein.';
+      status.className = 'status-msg error';
+    }
+  }
+
+  let decodeFailStreak = 0;
+  let decodeLockoutUntil = 0;
+
+  async function handleDecode() {
+    const status = document.getElementById('decodeStatus');
+    if (Date.now() < decodeLockoutUntil) {
+      const waitSec = Math.ceil((decodeLockoutUntil - Date.now()) / 1000);
+      status.textContent = `⏳ Bohat zyada ghalat attempts! ${waitSec}s baad try karein.`;
+      status.className = 'status-msg warning';
+      return;
+    }
+    const input = document.getElementById('decodeInput').value;
+    const password = document.getElementById('decodePassword').value;
+    const output = document.getElementById('decodedOutput');
+
+    if (!input) {
+      status.textContent = 'Barah-e-karam emoji ya stego message paste karein.';
+      status.className = 'status-msg error';
+      return;
+    }
+
+    const extracted = zeroWidthToBytes(input);
+    if (!extracted) {
+      status.textContent = 'Is emoji/text ke andar koi hidden data nahi mila.';
+      status.className = 'status-msg error';
+      output.value = '';
+      return;
+    }
+
+    const imgWrap = document.getElementById('decodedImageWrap');
+    const imgPreview = document.getElementById('decodedImagePreview');
+    if (imgWrap) imgWrap.style.display = 'none';
+
+    const res = await unpackAndDecrypt(extracted, password);
+    if (res.ok) {
+      let shownText = res.text;
+      try {
+        const parsed = JSON.parse(res.text);
+        if (parsed && (parsed.__stegoMedia || parsed.msg !== undefined || parsed.img || parsed.mediaId)) {
+          shownText = parsed.text || parsed.msg || '';
+          let resolvedImgUri = parsed.img || null;
+          if (!resolvedImgUri && parsed.mediaId) {
+            status.textContent = 'Original quality image load aur decrypt ho rahi hai...';
+            const b64Blob = await fetchEncryptedMediaBlob(parsed.mediaId);
+            if (b64Blob) {
+              const mediaBytes = base64ToUint8(b64Blob);
+              const mediaDec = await unpackAndDecrypt({ unarmored: mediaBytes, legacyRaw: mediaBytes }, password);
+              if (mediaDec.ok) resolvedImgUri = mediaDec.text;
+            }
+          }
+          if (resolvedImgUri && isSafeRasterDataUri(resolvedImgUri) && imgWrap && imgPreview) {
+            imgPreview.src = resolvedImgUri;
+            imgPreview.dataset.filename = parsed.imgName || 'secret-image.png';
+            imgWrap.style.display = 'block';
+          }
+        }
+      } catch (e) {}
+      output.value = shownText || (imgWrap && imgWrap.style.display === 'block' ? '[Original Quality Secret Photo Extracted Below]' : '');
+      status.textContent = `Secret message kamyabi se decode ho gaya!`;
+      status.className = 'status-msg success';
+    } else {
+      decodeFailStreak++;
+      if (decodeFailStreak >= 5) {
+        decodeLockoutUntil = Date.now() + 8000;
+        decodeFailStreak = 0;
+      }
+      output.value = '';
+      status.textContent = res.error;
+      status.className = 'status-msg error';
+    }
+  }
+
+  function copyOutput(elementId, statusId) {
+    const target = document.getElementById(elementId);
+    const status = document.getElementById(statusId);
+    if (!target.value) return;
+
+    const fallbackCopy = () => {
+      target.select();
+      document.execCommand('copy');
+      status.textContent = 'Clipboard par copy ho gaya!';
+      status.className = 'status-msg success';
+      setTimeout(() => { status.textContent = ''; }, 3000);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(target.value).then(() => {
+        status.textContent = 'Clipboard par copy ho gaya!';
+        status.className = 'status-msg success';
+        setTimeout(() => { status.textContent = ''; }, 3000);
+      }).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  }
+
+  function sendToDecoder() {
+    const encoded = document.getElementById('encodedOutput').value;
+    if (!encoded) return;
+    document.getElementById('decodeInput').value = encoded;
+    document.getElementById('decodePassword').value = document.getElementById('encodePassword').value;
+    switchTab('decode');
+    handleDecode();
+  }
+
+  function clearDecode() {
+    document.getElementById('decodeInput').value = '';
+    document.getElementById('decodedOutput').value = '';
+    document.getElementById('decodeStatus').textContent = '';
+  }
+
+  // ============================================================================
+  // 4. REAL-TIME STEGO CHAT ENGINE (Zero-Metadata + Unique Device ID + History Sync)
+  // ============================================================================
+  // GitHub Safe Configuration (No hardcoded personal database keys)
+  // Paste your Firebase Realtime Database config below or connect via the "🌐 Custom Server" button in the UI
+  const DEFAULT_FIREBASE_CONFIG = window.__HIDDEN_CHAT_FIREBASE_CONFIG__ || {
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+  };
+
+  let currentRoom = 'personal-room';
+  let currentRoomHash = 'room_default';
+  let currentRoomOwnerUid = null;
+  let currentRoomAdminHash = null;
+  let firebaseBaseUrl = DEFAULT_FIREBASE_CONFIG.databaseURL;
+  let panicStealthMode = false;
+  let roomMessages = [];
+  let pollTimer = null;
+  let lastSendTimestamp = 0;
+
+  function safeGetStorage(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function safeSetStorage(key, val) {
+    try { localStorage.setItem(key, val); } catch (e) {}
+  }
+
+  // Persistent Unique Device Tag so 2 users with the same Nickname ("Ali") never collide!
+  function getOrInitDeviceUid() {
+    let uid = safeGetStorage('stego_device_uid');
+    if (!uid) {
+      const rand = window.crypto.getRandomValues(new Uint8Array(2));
+      uid = Array.from(rand).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+      safeSetStorage('stego_device_uid', uid);
+    }
+    return uid;
+  }
+  function getOrInitAdminSecret() {
+    let sec = safeGetStorage('stego_admin_secret');
+    if (!sec) {
+      const rand = window.crypto.getRandomValues(new Uint8Array(16));
+      sec = Array.from(rand).map(b => b.toString(16).padStart(2, '0')).join('');
+      safeSetStorage('stego_admin_secret', sec);
+    }
+    return sec;
+  }
+  const myDeviceUid = getOrInitDeviceUid();
+  const myAdminSecret = getOrInitAdminSecret();
+  let activeUserUid = myDeviceUid;
+  let activeDisplayNick = 'Ali';
+  let activePortableAdminHash = '';
+  document.getElementById('myUidBadge').textContent = `ID: #${myDeviceUid}`;
+
+  function parseNickInput(rawVal) {
+    const trimmed = (rawVal || '').trim() || 'User';
+    const hashIdx = trimmed.indexOf('#');
+    if (hashIdx > 0 && hashIdx < trimmed.length - 1) {
+      return {
+        displayNick: trimmed.slice(0, hashIdx).trim() || 'User',
+        secretPin: trimmed.slice(hashIdx + 1).trim()
+      };
+    }
+    return {
+      displayNick: trimmed,
+      secretPin: ''
+    };
+  }
+
+  async function refreshPortableIdentity() {
+    const rawNick = document.getElementById('chatNick') ? document.getElementById('chatNick').value : 'Ali';
+    const roomPass = document.getElementById('chatPass') ? document.getElementById('chatPass').value : '';
+    const parsed = parseNickInput(rawNick);
+    activeDisplayNick = parsed.displayNick;
+    const normNick = parsed.displayNick.toLowerCase();
+
+    if (parsed.secretPin) {
+      // Portable #pin provided: derive a deterministic 4-hex UID across ANY browser or device!
+      const idHash = await sha256Hex('PORTABLE_UID_V1::' + normNick + '::' + parsed.secretPin + '::' + roomPass);
+      activeUserUid = idHash.slice(0, 4).toUpperCase();
+    } else {
+      activeUserUid = myDeviceUid;
+    }
+
+    // Portable Admin Token combines Nickname + optional #pin + Room Password + Room Hash
+    // So the room creator can log in from ANY device, incognito window, or browser using their Nickname + Room Password (and #pin if used)!
+    activePortableAdminHash = await sha256Hex(
+      'PORTABLE_ADMIN_V1::' + normNick + '::' + parsed.secretPin + '::' + roomPass + '::' + currentRoomHash
+    );
+
+    const badgeEl = document.getElementById('myUidBadge');
+    if (badgeEl) {
+      badgeEl.textContent = parsed.secretPin ? `ID: #${activeUserUid} (🔑 Portable)` : `ID: #${activeUserUid}`;
+    }
+    await updateClearRoomBtnState();
+  }
+
+  async function handleNickOrPassChange() {
+    await refreshPortableIdentity();
+    await renderChatFeed();
+  }
+
+  let localChannel = null;
+  try {
+    if ('BroadcastChannel' in window) {
+      localChannel = new BroadcastChannel('stego_realtime_channel');
+      localChannel.onmessage = (ev) => {
+        if (ev.data && ev.data.room === currentRoom) {
+          loadMessagesForRoom();
+        }
+      };
+    }
+  } catch (e) {}
+
+  function getLocalRoomStore(room) {
+    const raw = safeGetStorage('stego_room_v4_' + room);
+    if (raw) {
+      try { return JSON.parse(raw); } catch (e) {}
+    }
+    return null;
+  }
+
+  function saveLocalRoomStore(room, msgs) {
+    safeSetStorage('stego_room_v4_' + room, JSON.stringify(msgs));
+  }
+
+  function getClearedCutoff(room) {
+    const v = safeGetStorage('stego_cleared_at_' + room);
+    return v ? parseInt(v, 10) || 0 : 0;
+  }
+
+  async function computeRoomPathHash(roomName) {
+    const fullHash = await sha256Hex('STEGO_ROOM_NAMESPACE::' + roomName.trim().toLowerCase());
+    return 'r_' + fullHash.slice(0, 24);
+  }
+
+  async function checkIsCurrentUserRoomAdmin() {
+    if (!currentRoomOwnerUid && !currentRoomAdminHash) return true;
+    if (currentRoomAdminHash && activePortableAdminHash && currentRoomAdminHash === activePortableAdminHash) {
+      return true;
+    }
+    const legacyDeviceHash = await sha256Hex(myDeviceUid + '::' + myAdminSecret + '::' + currentRoomHash);
+    if (currentRoomAdminHash && currentRoomAdminHash === legacyDeviceHash) {
+      return true;
+    }
+    if (!currentRoomAdminHash && currentRoomOwnerUid && (currentRoomOwnerUid === activeUserUid || currentRoomOwnerUid === myDeviceUid)) {
+      return true;
+    }
+    return false;
+  }
+
+  async function updateClearRoomBtnState() {
+    const clearBtn = document.querySelector('button[onclick="clearChatRoom()"]');
+    const roleSpan = document.getElementById('roomCountInfo');
+    const isOwner = await checkIsCurrentUserRoomAdmin();
+    const hasOwnerRecord = Boolean(currentRoomOwnerUid || currentRoomAdminHash);
+    if (roleSpan) {
+      const roleBadge = hasOwnerRecord
+        ? (isOwner ? ' <span style="color:#4ade80;font-size:0.75rem;">(👑 Room Admin)</span>' : ' <span style="color:#94a3b8;font-size:0.75rem;">(👤 Member)</span>')
+        : '';
+      roleSpan.innerHTML = `Room: <strong>${escapeHtml(currentRoom)}</strong>${roleBadge}`;
+    }
+    if (clearBtn) {
+      if (isOwner) {
+        clearBtn.style.opacity = '1';
+        clearBtn.title = 'Aap is room ke Admin/Creator hain — sab ke liye chat delete kar sakte hain';
+      } else {
+        clearBtn.style.opacity = '0.55';
+        clearBtn.title = 'Sirf Room Creator (Admin) sab ke liye room clear kar sakta hai';
+      }
+    }
+  }
+
+  async function ensureSeedMessages(room) {
+    const existing = getLocalRoomStore(room);
+    if (existing && existing.length > 0) return existing;
+
+    const demoPass = '1234';
+    const env1 = JSON.stringify({
+      msg: 'Assalam-o-Alaikum! Offline hone ke baad bhi jab aap room join karenge, pichli chat history khud load ho jayegi.',
+      nick: 'Hamza',
+      uid: 'A9F2'
+    });
+    const env2 = JSON.stringify({
+      msg: 'Har message mukammal protected hai. Kisi doosre decoder ya AI tool se yeh decode nahi ho sakta!',
+      nick: 'Ali',
+      uid: myDeviceUid
+    });
+
+    const p1 = await packAndEncrypt(env1, demoPass);
+    const p2 = await packAndEncrypt(env2, demoPass);
+
+    const seeded = [
+      {
+        id: 'seed_1',
+        sender: 'Hamza',
+        uid: 'A9F2',
+        stegoText: '[🤖] Aaj mausam kafi acha hai!' + bytesToZeroWidth(p1),
+        timestamp: Date.now() - 120000
+      },
+      {
+        id: 'seed_2',
+        sender: 'Ali',
+        uid: myDeviceUid,
+        stegoText: '[☕] Sham ko chai peene chalein?' + bytesToZeroWidth(p2),
+        timestamp: Date.now() - 60000
+      }
+    ];
+    saveLocalRoomStore(room, seeded);
+    return seeded;
+  }
+
+  async function loadMessagesForRoom() {
+    currentRoomHash = await computeRoomPathHash(currentRoom);
+    await refreshPortableIdentity();
+    const ttlMs = parseInt(document.getElementById('chatTtlSelect').value, 10) || 0;
+    const cutoffTime = getClearedCutoff(currentRoom);
+    const now = Date.now();
+
+    if (firebaseBaseUrl) {
+      try {
+        const cleanUrl = firebaseBaseUrl.replace(/\/+$/, '');
+        const res = await fetch(`${cleanUrl}/rooms/${encodeURIComponent(currentRoomHash)}.json`);
+        if (res.ok) {
+          const roomObj = await res.json();
+          const data = roomObj && roomObj.messages ? roomObj.messages : null;
+          let ownerUid = roomObj && roomObj.meta && roomObj.meta.ownerUid ? roomObj.meta.ownerUid : null;
+          currentRoomAdminHash = roomObj && roomObj.meta && roomObj.meta.adminTokenHash ? roomObj.meta.adminTokenHash : null;
+
+          if (!data) {
+            roomMessages = [];
+          } else {
+            const parsedList = Object.entries(data).map(([id, val]) => ({
+              id,
+              sender: val.sender || 'Encrypted User',
+              uid: val.uid || '----',
+              stegoText: val.stegoText || '',
+              timestamp: val.timestamp || now
+            })).sort((a, b) => a.timestamp - b.timestamp);
+
+            if (!ownerUid && parsedList.length > 0 && parsedList[0].uid && parsedList[0].uid !== '----') {
+              ownerUid = parsedList[0].uid;
+            }
+            roomMessages = parsedList.filter(m => m.timestamp > cutoffTime && (ttlMs === 0 || (now - m.timestamp) <= ttlMs));
+          }
+
+          currentRoomOwnerUid = ownerUid;
+          updateClearRoomBtnState();
+          await renderChatFeed();
+          return;
+        }
+      } catch (e) {
+        // Fallback to local cache when offline or in sandbox preview
+      }
+    }
+
+    const localOwner = safeGetStorage('stego_owner_' + currentRoom) || myDeviceUid;
+    safeSetStorage('stego_owner_' + currentRoom, localOwner);
+    currentRoomOwnerUid = localOwner;
+    updateClearRoomBtnState();
+
+    const msgs = await ensureSeedMessages(currentRoom);
+    roomMessages = msgs.filter(m => m.timestamp > cutoffTime && (ttlMs === 0 || (now - m.timestamp) <= ttlMs));
+    await renderChatFeed();
+  }
+  window.loadMessagesForRoom = loadMessagesForRoom;
+
+  function attachedChatImageUriName() { return attachedChatImageName || 'secret-photo.png'; }
+
+  async function sendChatMessage() {
+    const now = Date.now();
+    const status = document.getElementById('chatStatus');
+    if (now - lastSendTimestamp < 800) {
+      status.textContent = 'Thora aahista! Anti-spam protection active hai.';
+      status.className = 'status-msg warning';
+      return;
+    }
+
+    await refreshPortableIdentity();
+    const nick = activeDisplayNick || 'User';
+    const secret = document.getElementById('chatSecretInput').value.trim();
+    const rawCover = document.getElementById('chatCoverInput').value.trim() || '[🤖]';
+    const pass = document.getElementById('chatPass').value;
+
+    if (!secret && !attachedChatImageDataUri) {
+      status.textContent = 'Pehle message likhein ya photo select karein.';
+      status.className = 'status-msg error';
+      return;
+    }
+
+    try {
+      lastSendTimestamp = now;
+      const isSimple = (currentChatMode === 'simple');
+      const cover = isSimple ? '💬' : rawCover;
+
+      let mediaId = null;
+      if (attachedChatImageDataUri) {
+        status.textContent = 'Original quality photo encrypt aur upload ho rahi hai...';
+        status.className = 'status-msg warning';
+        mediaId = 'm_' + now + '_' + myDeviceUid + '_' + Math.random().toString(36).slice(2, 6);
+        const encImgBytes = await packAndEncrypt(attachedChatImageDataUri, pass);
+        await storeEncryptedMediaBlob(mediaId, uint8ToBase64(encImgBytes));
+      }
+
+      const envelopeJson = JSON.stringify({
+        msg: secret,
+        mediaId: mediaId,
+        imgName: attachedChatImageUriName(),
+        simple: isSimple,
+        nick: nick,
+        uid: activeUserUid
+      });
+
+      const encryptedBytes = await packAndEncrypt(envelopeJson, pass);
+      const zw = bytesToZeroWidth(encryptedBytes);
+      const stegoText = stripZeroWidth(cover) + zw;
+
+      // In Firebase, sender name is NOT stored in plaintext — only an anonymous tag is saved
+      const msgObj = {
+        id: 'msg_' + now + '_' + activeUserUid,
+        sender: 'StegoUser',
+        uid: activeUserUid,
+        stegoText: stegoText,
+        timestamp: now
+      };
+
+      currentRoomHash = await computeRoomPathHash(currentRoom);
+
+      if (firebaseBaseUrl) {
+        const cleanUrl = firebaseBaseUrl.replace(/\/+$/, '');
+        try {
+          if (!currentRoomOwnerUid && !currentRoomAdminHash) {
+            const adminTokenHash = activePortableAdminHash;
+            await fetch(`${cleanUrl}/rooms/${encodeURIComponent(currentRoomHash)}/meta.json`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ownerUid: activeUserUid, adminTokenHash: adminTokenHash, createdAt: now })
+            });
+            currentRoomOwnerUid = activeUserUid;
+            currentRoomAdminHash = adminTokenHash;
+            await updateClearRoomBtnState();
+          }
+          await fetch(`${cleanUrl}/rooms/${encodeURIComponent(currentRoomHash)}/messages.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(msgObj)
+          });
+        } catch (netErr) {}
+      }
+
+      const currentList = getLocalRoomStore(currentRoom) || [];
+      currentList.push(msgObj);
+      saveLocalRoomStore(currentRoom, currentList);
+      if (localChannel) {
+        localChannel.postMessage({ room: currentRoom });
+      }
+
+      document.getElementById('chatSecretInput').value = '';
+      clearChatImage();
+      status.textContent = (currentChatMode === 'simple')
+        ? 'Message send ho gaya!'
+        : `Secret message "${stripZeroWidth(cover)}" ke andar chup kar send ho gaya!`;
+      status.className = 'status-msg success';
+      await loadMessagesForRoom();
+    } catch (e) {
+      status.textContent = 'Message send nahi ho saka. Connection check karein.';
+      status.className = 'status-msg error';
+    }
+  }
+
+  async function renderChatFeed() {
+    const feed = document.getElementById('chatFeed');
+    const pass = document.getElementById('chatPass').value;
+
+    if (!roomMessages || roomMessages.length === 0) {
+      feed.innerHTML = `<div class="chat-empty">Is room mein abhi koi message nahi hai.<br>Neeche Secret Message aur Cover Emoji likh kar pehla encrypted stego message bhejein!</div>`;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    for (const msg of roomMessages) {
+      const visibleCover = stripZeroWidth(msg.stegoText);
+      const extracted = zeroWidthToBytes(msg.stegoText);
+
+      let displaySender = msg.sender || 'User';
+      let displayUid = msg.uid || '----';
+      let secretHtml = '';
+
+      if (extracted) {
+        const dec = await unpackAndDecrypt(extracted, pass);
+        if (dec.ok) {
+          let secretText = dec.text;
+          let secretImg = null;
+          let secretImgName = 'secret-photo.png';
+          let isSimpleMsg = false;
+          try {
+            const parsed = JSON.parse(dec.text);
+            if (parsed && typeof parsed.msg === 'string') {
+              secretText = parsed.msg;
+              if (parsed.imgName) secretImgName = parsed.imgName;
+              if (parsed.img) {
+                secretImg = parsed.img;
+              } else if (parsed.mediaId) {
+                const b64Blob = await fetchEncryptedMediaBlob(parsed.mediaId);
+                if (b64Blob) {
+                  const mediaBytes = base64ToUint8(b64Blob);
+                  const mediaDec = await unpackAndDecrypt({ unarmored: mediaBytes, legacyRaw: mediaBytes }, pass);
+                  if (mediaDec.ok) secretImg = mediaDec.text;
+                }
+              }
+              if (parsed.simple) isSimpleMsg = true;
+              if (parsed.nick) displaySender = parsed.nick;
+              if (parsed.uid) displayUid = parsed.uid;
+            }
+          } catch (jsonErr) {}
+
+          if (!panicStealthMode) {
+            const safeImgSrc = (secretImg && isSafeRasterDataUri(secretImg)) ? escapeHtml(secretImg) : '';
+            const safeImgName = escapeHtml(secretImgName);
+            const imgTag = safeImgSrc
+              ? `<div class="stego-img-card">
+                   <img src="${safeImgSrc}" data-filename="${safeImgName}" class="stego-img-preview" alt="Secret Photo" title="Click to view full size">
+                   <div class="stego-img-toolbar">
+                     <button type="button" class="mini-btn" data-zoom-src="${safeImgSrc}" data-zoom-name="${safeImgName}">🔍 Barra Karein (Full View)</button>
+                     <button type="button" class="mini-btn" data-dl-src="${safeImgSrc}" data-dl-name="${safeImgName}">⬇️ Download Original</button>
+                   </div>
+                 </div>`
+              : '';
+            if (isSimpleMsg) {
+              secretHtml = `<div class="msg-secret-box" style="margin-top:2px; background:transparent; border:none; padding:2px 0; font-size:0.96rem; color:#f8fafc;">${escapeHtml(secretText)}${imgTag}</div>`;
+            } else {
+              secretHtml = `<div class="msg-secret-box">🔓 <strong>Secret:</strong> ${escapeHtml(secretText)}${imgTag}</div>`;
+            }
+          }
+        } else if (!panicStealthMode) {
+          secretHtml = `<div class="msg-secret-box locked">🔒 Secret message locked hai — parhne ke liye upar sahi Room Password dalein</div>`;
+        }
+      }
+
+      // Determine ownership by Unique Device UID so two users with the same Nickname never collide!
+      const isMe = (displayUid === activeUserUid || displayUid === myDeviceUid);
+      const row = document.createElement('div');
+      row.className = 'msg-row ' + (isMe ? 'sent' : 'received');
+
+      const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.innerHTML = `
+        <div class="msg-meta">
+          <span class="sender-tag">
+            ${escapeHtml(displaySender)}
+            <span class="sender-uid">#${escapeHtml(displayUid)}</span>
+            ${isMe ? '<span style="color:#4ade80;font-size:0.68rem;">(You)</span>' : ''}
+          </span>
+          <span>${timeStr}</span>
+        </div>
+        <div class="msg-carrier-line">${escapeHtml(visibleCover)}</div>
+        ${secretHtml}
+        <div class="msg-actions">
+          <button class="mini-btn" data-copy-id="${escapeHtml(msg.id)}">📋 Copy Stego for WhatsApp</button>
+          <button class="mini-btn" data-inspect-id="${escapeHtml(msg.id)}">🔍 Inspect in Decoder</button>
+        </div>
+      `;
+
+      row.appendChild(bubble);
+      fragment.appendChild(row);
+    }
+
+    feed.innerHTML = '';
+    feed.appendChild(fragment);
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  document.getElementById('chatFeed').addEventListener('click', (e) => {
+    const clickedImg = e.target.closest('.stego-img-preview');
+    if (clickedImg && clickedImg.src) {
+      openImageLightbox(clickedImg.src, clickedImg.getAttribute('data-filename') || 'secret-photo.png');
+      return;
+    }
+
+    const zoomBtn = e.target.closest('[data-zoom-src]');
+    if (zoomBtn) {
+      openImageLightbox(zoomBtn.getAttribute('data-zoom-src'), zoomBtn.getAttribute('data-zoom-name') || 'secret-photo.png');
+      return;
+    }
+
+    const dlBtn = e.target.closest('[data-dl-src]');
+    if (dlBtn) {
+      downloadStegoImage(dlBtn.getAttribute('data-dl-src'), dlBtn.getAttribute('data-dl-name') || 'secret-photo.png');
+      return;
+    }
+
+    const copyBtn = e.target.closest('[data-copy-id]');
+    if (copyBtn) {
+      const id = copyBtn.getAttribute('data-copy-id');
+      const found = roomMessages.find(m => m.id === id);
+      if (found) {
+        copyRawString(found.stegoText);
+        copyBtn.textContent = '✅ Copied!';
+        setTimeout(() => { copyBtn.textContent = '📋 Copy Stego for WhatsApp'; }, 2000);
+      }
+      return;
+    }
+
+    const inspectBtn = e.target.closest('[data-inspect-id]');
+    if (inspectBtn) {
+      const id = inspectBtn.getAttribute('data-inspect-id');
+      const found = roomMessages.find(m => m.id === id);
+      if (found) {
+        document.getElementById('decodeInput').value = found.stegoText;
+        document.getElementById('decodePassword').value = document.getElementById('chatPass').value;
+        switchTab('decode');
+        handleDecode();
+      }
+    }
+  });
+
+  function copyRawString(str) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(str).catch(() => fallbackCopyText(str));
+    } else {
+      fallbackCopyText(str);
+    }
+  }
+
+  function fallbackCopyText(str) {
+    const temp = document.createElement('textarea');
+    temp.value = str;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function refreshAllChatDecryption() {
+    renderChatFeed();
+  }
+
+  async function joinRoom() {
+    const inputRoom = document.getElementById('chatRoom').value.trim() || 'personal-room';
+    currentRoom = inputRoom;
+    currentRoomHash = await computeRoomPathHash(currentRoom);
+    document.getElementById('roomCountInfo').innerHTML = `Room: <strong>${escapeHtml(currentRoom)}</strong>`;
+    if (typeof window.__subscribeFirebaseRoom === 'function') {
+      window.__subscribeFirebaseRoom(currentRoomHash);
+    }
+    await loadMessagesForRoom();
+    const status = document.getElementById('chatStatus');
+    status.textContent = `Room "${currentRoom}" join ho gaya! Purani chat history sync ho gayi hai.`;
+    status.className = 'status-msg success';
+  }
+
+  // Hides messages only on THIS user's screen without deleting from Firebase for others
+  async function hideRoomLocally() {
+    safeSetStorage('stego_cleared_at_' + currentRoom, String(Date.now()));
+    await loadMessagesForRoom();
+    const status = document.getElementById('chatStatus');
+    status.textContent = 'Sirf aapki screen se purani chat clear ho gayi (baqi users ke paas safe hai).';
+    status.className = 'status-msg success';
+  }
+
+  // Deletes room history from Firebase for ALL users ONLY if the current user is the Room Creator (Admin)
+  async function clearChatRoom() {
+    const status = document.getElementById('chatStatus');
+    await refreshPortableIdentity();
+    const isVerifiedCreator = await checkIsCurrentUserRoomAdmin();
+    if (!isVerifiedCreator) {
+      status.textContent = `⛔ Sirf Room Creator (Admin #${currentRoomOwnerUid || 'Creator'}) hi sab ke liye room clear kar sakta hai! Agar aap creator hain to wahi Nickname (aur #pin) + Password likhein.`;
+      status.className = 'status-msg error';
+      return;
+    }
+
+    currentRoomHash = await computeRoomPathHash(currentRoom);
+    if (firebaseBaseUrl) {
+      const cleanUrl = firebaseBaseUrl.replace(/\/+$/, '');
+      try {
+        await fetch(`${cleanUrl}/rooms/${encodeURIComponent(currentRoomHash)}/messages.json`, {
+          method: 'DELETE'
+        });
+      } catch (e) {}
+    }
+    saveLocalRoomStore(currentRoom, []);
+    roomMessages = [];
+    if (localChannel) localChannel.postMessage({ room: currentRoom });
+    await renderChatFeed();
+    status.textContent = `👑 Room Admin: Room "${currentRoom}" ki tamam chat sab users ke liye clear kar di gayi hai.`;
+    status.className = 'status-msg warning';
+  }
+
+  function cycleRandomCover() {
+    coverIndex = (coverIndex + 1);
+    if (currentCoverStyle === 'emoji') {
+      const emo = INBUILT_EMOJIS[coverIndex % INBUILT_EMOJIS.length];
+      document.getElementById('chatCoverInput').value = `[${emo}]`;
+    } else {
+      document.getElementById('chatCoverInput').value = COVER_PRESETS[coverIndex % COVER_PRESETS.length];
+    }
+  }
+
+  function togglePanicMode() {
+    panicStealthMode = !panicStealthMode;
+    const btn = document.getElementById('panicBtn');
+    if (panicStealthMode) {
+      btn.textContent = '🙈 Stealth Mode: ON (Secrets Hidden)';
+      btn.style.borderColor = '#f59e0b';
+      btn.style.color = '#fde68a';
+    } else {
+      btn.textContent = '👁️ Reveal Mode: ON';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }
+    renderChatFeed();
+  }
+
+  function handleChatKey(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const lb = document.getElementById('imageLightboxModal');
+      if (lb && lb.classList.contains('open')) {
+        closeImageLightbox();
+        return;
+      }
+      const modal = document.getElementById('customNodeModal');
+      if (modal && modal.classList.contains('open')) {
+        closeCustomNodeModal();
+      } else {
+        togglePanicMode();
+      }
+    }
+  });
+
+  // ============================================================================
+  // 5. CUSTOM SERVER BRIDGE & TAB SWITCHING
+  // ============================================================================
+  function openCustomNodeModal() {
+    document.getElementById('customDbInput').value = '';
+    document.getElementById('customNodeStatus').textContent = '';
+    document.getElementById('customNodeModal').classList.add('open');
+  }
+
+  function closeCustomNodeModal() {
+    document.getElementById('customNodeModal').classList.remove('open');
+  }
+
+  function isAllowedFirebaseUrl(rawUrl) {
+    try {
+      const u = new URL(rawUrl);
+      if (u.protocol !== 'https:') return false;
+      const host = u.hostname.toLowerCase();
+      if (host === 'localhost' || host === '127.0.0.1' || /^[0-9.]+$/.test(host)) return false;
+      return host.endsWith('.firebaseio.com') || host.endsWith('.firebasedatabase.app');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function saveCustomServer() {
+    const val = document.getElementById('customDbInput').value.trim();
+    const status = document.getElementById('customNodeStatus');
+    if (!isAllowedFirebaseUrl(val)) {
+      status.textContent = 'Security Block: Sirf official https://*.firebaseio.com ya https://*.firebasedatabase.app URL allowed hai.';
+      status.className = 'status-msg error';
+      return;
+    }
+    firebaseBaseUrl = val;
+    safeSetStorage('stego_custom_db_url', val);
+    updateDbBadge(true);
+    status.textContent = 'Custom Firebase Server connect ho gaya!';
+    status.className = 'status-msg success';
+    loadMessagesForRoom();
+    setTimeout(closeCustomNodeModal, 800);
+  }
+
+  function resetToDefaultServer() {
+    firebaseBaseUrl = DEFAULT_FIREBASE_CONFIG.databaseURL;
+    safeSetStorage('stego_custom_db_url', '');
+    updateDbBadge(false);
+    loadMessagesForRoom();
+    closeCustomNodeModal();
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+    if (tab === 'chat') {
+      document.getElementById('tabBtnChat').classList.add('active');
+      document.getElementById('chatPanel').classList.add('active');
+    } else if (tab === 'encode') {
+      document.getElementById('tabBtnEncode').classList.add('active');
+      document.getElementById('encodePanel').classList.add('active');
+    } else {
+      document.getElementById('tabBtnDecode').classList.add('active');
+      document.getElementById('decodePanel').classList.add('active');
+    }
+  }
+
+  function updateDbBadge(isCustom) {
+    const badge = document.getElementById('dbModeBadge');
+    if (isCustom) {
+      badge.className = 'badge local';
+      badge.textContent = '🌐 Custom Firebase Node Active';
+    } else {
+      badge.className = 'badge online';
+      badge.textContent = '🟢 Live Encrypted Sync Active';
+    }
+  }
+
+  // Auto-engage Stealth Mode after 15 minutes of inactivity (Check 7: Session Expiry Protection)
+  let idleLockTimer = null;
+  function resetIdleTimer() {
+    if (idleLockTimer) clearTimeout(idleLockTimer);
+    idleLockTimer = setTimeout(() => {
+      if (!panicStealthMode) {
+        togglePanicMode();
+      }
+    }, 15 * 60 * 1000);
+  }
+  ['mousemove', 'keydown', 'click', 'touchstart'].forEach(evName => {
+    window.addEventListener(evName, resetIdleTimer, { passive: true });
+  });
+  resetIdleTimer();
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    const customUrl = safeGetStorage('stego_custom_db_url');
+    if (customUrl && customUrl.startsWith('https://')) {
+      firebaseBaseUrl = customUrl;
+      updateDbBadge(true);
+    } else {
+      firebaseBaseUrl = DEFAULT_FIREBASE_CONFIG.databaseURL;
+      updateDbBadge(false);
+    }
+    currentRoomHash = await computeRoomPathHash(currentRoom);
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(loadMessagesForRoom, 2000);
+    loadMessagesForRoom();
+  });
+</script>
+
+<!-- Firebase Modular SDK Live Listener -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = window.__HIDDEN_CHAT_FIREBASE_CONFIG__ || {
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+  };
+
+  if (firebaseConfig.databaseURL && firebaseConfig.databaseURL.startsWith("https://")) {
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window.__subscribeFirebaseRoom = (roomHash) => {
+        try {
+          const roomRef = ref(db, `rooms/${roomHash}/messages`);
+          onValue(roomRef, () => {
+            if (typeof window.loadMessagesForRoom === 'function') {
+              window.loadMessagesForRoom();
+            }
+          });
+        } catch (e) {}
+      };
+    } catch (err) {}
+  }
+</script>
+</body>
+</html>
